@@ -15,7 +15,7 @@ namespace BronzeBar
         public string CreateAppDeployer(string packageName, string appName, string fullDestinationPath)
         {
             string batchFile = File.ReadAllText(Path.Combine(programRootDirectory, "template_appdeployer.bat"));
-            batchFile = string.Format(batchFile, fullDestinationPath, appName);
+            batchFile = string.Format(batchFile, Path.Combine(fullDestinationPath), appName, Path.Combine(fullDestinationPath, appName));
             return batchFile;
         }
     }

@@ -157,16 +157,15 @@ namespace BronzeBar
                             {
                                 extension += " ! MIRROR SOURCE MISSING";
                             }
-                            if (!Directory.Exists(Path.Combine(GetSysFolderInPackage(objectSelection, "data"), package.Name.Remove(package.Name.Length - 4))))
+                            if (!Directory.Exists(Path.Combine(GetSysFolderInPackage(currentDirInfo.Name, "data"), package.Name.Remove(package.Name.Length - 4))))
                             {
                                 extension += " ! BINARIES MISSING";
                             }
-
                             PrintLine("    |---* " + package.Name.Remove(package.Name.Length - 4) + extension);
                         }
                     }
                     else PrintLine("    !---* " + "NO DATA FOLDER FOUND!");
-
+                        
                     if (!currentDirInfo.GetDirectories().Any(o => o.Name == "deployments")) PrintLine("    !---* " + "NO DEPLOYMENTS FOLDER FOUND!");
 
 

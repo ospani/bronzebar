@@ -11,4 +11,13 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="scripts\template_appdeployer.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="scripts\template_packdeployer.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -220,12 +220,9 @@ namespace BronzeBar
                 PrintLine($"Enter external deployment output directory:");
                 string externalDeploymentTarget = GetUserInput();
 
-                
-
-
                 FileInfo[] bbdFilesInPackageDirectory = new DirectoryInfo(GetSysFolderInPackage(objectSelection, "data")).GetFiles("*.BBD");
-
-                foreach(FileInfo bbdOfPackageToDeploy in bbdFilesInPackageDirectory)
+                BatchScriptFactory bsf = new BatchScriptFactory(workingDir);
+                foreach (FileInfo bbdOfPackageToDeploy in bbdFilesInPackageDirectory)
                 {
                     string appName = bbdOfPackageToDeploy.Name.Remove(bbdOfPackageToDeploy.Name.Length - 4);
                     string packageDeploymentDirectory = Path.Combine(GetSysFolderInPackage(objectSelection, "deployments"), deploymentName, appName);
@@ -239,7 +236,7 @@ namespace BronzeBar
                         Directory.CreateDirectory(packageDeploymentDirectory);
                     }
                     PrintLine("Generating solo app deployment batch...");
-                    BatchScriptFactory bsf = new BatchScriptFactory(workingDir);
+
                     string deployerBatch = bsf.CreateAppDeployer(objectSelection, appName, externalDeploymentTarget);
                     using (StreamWriter sw = File.CreateText(Path.Combine(GetSysFolderInPackage(objectSelection, "deployments"), deploymentName, $"solo_{appName}.bat")))
                     {
@@ -249,6 +246,12 @@ namespace BronzeBar
                     PrintLine($"Copying {Path.Combine(GetSysFolderInPackage(objectSelection, "data"), appName)} to {packageDeploymentDirectory}");
                     DirectoryCopy(Path.Combine(GetSysFolderInPackage(objectSelection, "data"), appName), packageDeploymentDirectory, true);
                     PrintLine("Done copying. Enjoy your meal.");
+                }
+
+                string packageDeployerBatch = bsf.CreatePackageDeployer(objectSelection, externalDeploymentTarget);
+                using (StreamWriter sw = File.CreateText(Path.Combine(GetSysFolderInPackage(objectSelection, "deployments"), deploymentName, $"pack_{deploymentName}.bat")))
+                {
+                    sw.Write(packageDeployerBatch);
                 }
             }
             else
@@ -328,6 +331,58 @@ namespace BronzeBar
                     PrintLine($"Error creating packages directory: {ex.Message}");
                     PrintLine("Exiting");
                     return;
+                }
+            }
+
+            string scriptsFolder = Path.Combine(workingDir + @"scripts\");
+            if (!Directory.Exists(scriptsFolder))
+            {
+                try
+                {
+                    Directory.CreateDirectory(scriptsFolder);
+                }
+                catch (Exception ex)
+                {
+                    PrintLine($"Error creating scripts directory: {ex.Message}");
+                    PrintLine("Exiting");
+                    return;
+                }
+            }
+            
+            string assemblyFolder = AppDomain.CurrentDomain.BaseDirectory;
+            FileInfo[] batchFilesInBinaryDirectory = new DirectoryInfo(Path.Combine(assemblyFolder, @"scripts\")).GetFiles("*.bat");
+            FileInfo[] filesInWorkingDirectory = new DirectoryInfo(scriptsFolder).GetFiles("*.bat");
+            foreach(FileInfo batchFileInBinaryDirectory in batchFilesInBinaryDirectory)
+            {
+                FileInfo fileInWorkingDirectory = filesInWorkingDirectory.Where(bat => bat.Name == batchFileInBinaryDirectory.Name).FirstOrDefault();
+                if(fileInWorkingDirectory == null)
+                {
+                    PrintLine($"File: {batchFileInBinaryDirectory.Name} not present in working directory.");
+                    try
+                    {
+                        File.Copy(batchFileInBinaryDirectory.FullName, Path.Combine(scriptsFolder + batchFileInBinaryDirectory.Name), true);
+                        PrintLine($"File: {batchFileInBinaryDirectory.Name} created.");
+                    }
+                    catch (Exception ex)
+                    {
+                        PrintLine($"Exception encountered copying {batchFileInBinaryDirectory.FullName} to {Path.Combine(scriptsFolder + batchFileInBinaryDirectory.FullName)}: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    PrintLine($"File: {batchFileInBinaryDirectory.Name} present in working directory.");
+                    if (!File.ReadAllBytes(fileInWorkingDirectory.FullName).SequenceEqual(File.ReadAllBytes(batchFileInBinaryDirectory.FullName)))
+                    {
+                        try
+                        {
+                            File.Copy(batchFileInBinaryDirectory.FullName, fileInWorkingDirectory.FullName, true);
+                            PrintLine($"File: {fileInWorkingDirectory.Name} updated.");
+                        }
+                        catch (Exception ex)
+                        {
+                            PrintLine($"Exception encountered copying {batchFileInBinaryDirectory.FullName} to {fileInWorkingDirectory.FullName}: {ex.Message}");
+                        }
+                    }
                 }
             }
 

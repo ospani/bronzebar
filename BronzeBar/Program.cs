@@ -7,13 +7,13 @@ namespace BronzeBar
     {
         static void Main(string[] args)
         {
-            BronzeBar.PrintLine("Welcome to Bronze Bar.");
+            Console.WriteLine("Welcome to Bronze Bar.");
             BronzeBar.DoStartup();
             bool exitRequested = false;
             while (!exitRequested)
             {
                 string userInput = BronzeBar.GetUserInput();
-                BronzeBar.ParseUserInput(userInput);
+                exitRequested = BronzeBar.ParseUserInput(userInput);
             }
         }
     }

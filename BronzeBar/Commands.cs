@@ -60,6 +60,13 @@ namespace BronzeBar
             },
             {"update", new Command((string[] args) =>
                 {
+                    if(args == null || args.Length == 0)
+                    {
+                        PrintLine("Cannot update an app with no name.");
+                        PrintLine("Allowed: 1-32 alphanumeric characters including underscores");
+                        return;
+                    }
+
                     string appIdentifier = args[0];
                     if (string.IsNullOrEmpty(BronzeBar.PackageSelection))
                     {

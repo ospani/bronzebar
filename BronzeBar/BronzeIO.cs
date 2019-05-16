@@ -63,7 +63,6 @@ namespace BronzeBar
             bool c = Directory.Exists(Path.Combine(PackagesDirectory, packageName, "deployments"));
             return a && b && c;
         }
-
         public static string GetPackageFullPath(string packageName)
         {
             if (!PackageExists(packageName))
@@ -79,6 +78,29 @@ namespace BronzeBar
                 return "";
             }
             return Path.Combine(GetPackageFullPath(packageName), folderWithinPackage);
+        }
+        public static bool CreateBBD(string bddContent, string applicationName)
+        {
+            if (!Directory.Exists(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data")))) return false;
+
+            try
+            {
+                using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), $"{applicationName}.BBD")))
+                {
+                    sw.Write(bddContent);
+                }
+                return true;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"CreateBBD encountered an exception: {ex.Message}");
+                while(ex.InnerException != null)
+                {
+                    Console.WriteLine($"CreateBBD encountered an exception: {ex.InnerException}");
+                    ex = ex.InnerException;
+                }
+                return false;
+            }   
         }
     }
 }

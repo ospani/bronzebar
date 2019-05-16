@@ -9,7 +9,6 @@ namespace BronzeBar
     public class Command
     {
         private readonly Action<string[]> commandImplementation;
-
         public Command(Action<string[]> commandToExecute)
         {
             commandImplementation = commandToExecute;
@@ -22,18 +21,31 @@ namespace BronzeBar
 
     static class Commands
     {
+        public static void ExecuteCommand(string command, string[] args = null)
+        {
+            command = command.ToLower();
+            if (CommandList.ContainsKey(command))
+            {
+                CommandList[command].Execute(args);
+            }
+            else
+            {
+                PrintLine("Unknown command");
+            }
+        }
+
         private static Dictionary<string, Command> CommandList = new Dictionary<string, Command>()
         {
             {"armory", new Command((string[] args) =>
                 {
                     PrintLine("* BronzeBar Root");
                     PrintLine("|");
-                    foreach (string dir in Directory.GetDirectories(BronzeIO.PackagesDirectory))
+                    foreach (string dir in Directory.GetDirectories(BronzeIO.PackagesDirectory)) 
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         DirectoryInfo currentDirInfo = new DirectoryInfo(dir);
                         PrintLine("|---* " + currentDirInfo.Name);
-                        if (currentDirInfo.GetDirectories().Any(o => o.Name == "data"))
+                        if (currentDirInfo.GetDirectories().Any(o => o.Name == "data")) //If this package has a data folder...
                         {
                             FileInfo[] bbdFilesInPackageDirectory = currentDirInfo.GetDirectories("data")[0].GetFiles("*.BBD");
                             foreach (FileInfo package in bbdFilesInPackageDirectory)
@@ -66,7 +78,6 @@ namespace BronzeBar
                         PrintLine("Allowed: 1-32 alphanumeric characters including underscores");
                         return;
                     }
-
                     string appIdentifier = args[0];
                     if (string.IsNullOrEmpty(BronzeBar.PackageSelection))
                     {
@@ -82,7 +93,7 @@ namespace BronzeBar
                     if (BronzeIO.PackageExists(BronzeBar.PackageSelection))
                     {
                         string appDataFolder = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), appIdentifier);
-                        if (File.Exists($@"{appIdentifier}.BBD"))
+                        if (File.Exists(($@"{appDataFolder}.BBD").Trim()))
                         {
                             PrintLine("Updating app!");
                             string mirrorSourceDirectory = File.ReadAllText($@"{appDataFolder}.BBD").Trim();
@@ -184,10 +195,10 @@ namespace BronzeBar
 
                     Console.WriteLine("Enter app identifier below:");
                     string programToAddName = BronzeBar.GetUserInput();
-
-                    using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), $"{programToAddName}.BBD")))
+                    if(!BronzeIO.CreateBBD(pathToTargetDirectory, programToAddName))
                     {
-                        sw.Write(pathToTargetDirectory);
+                        PrintLine($"Unable to create BBD for {programToAddName}");
+                        return;
                     }
                     string ToCopyTo = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), programToAddName);
                     BronzeIO.DirectoryCopy(pathToTargetDirectory, ToCopyTo, true);
@@ -250,19 +261,6 @@ namespace BronzeBar
         private static void PrintLine(string v)
         {
             Console.WriteLine(v);
-        }
-
-        public static void ExecuteCommand(string command, string[] args = null)
-        {
-            command = command.ToLower();
-            if(CommandList.ContainsKey(command))
-            {
-                CommandList[command].Execute(args);
-            }
-            else
-            {
-                PrintLine("Unknown command");
-            }
         }
     }
 }

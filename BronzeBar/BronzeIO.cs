@@ -82,11 +82,11 @@ namespace BronzeBar
         }
         public static bool CreateBBD(string bddContent, string applicationName)
         {
-            if (!Directory.Exists(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data")))) return false;
+            if (!Directory.Exists(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data")))) return false;
 
             try
             {
-                using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), $"{applicationName}.BBD")))
+                using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"), $"{applicationName}.BBD")))
                 {
                     sw.Write(bddContent);
                 }

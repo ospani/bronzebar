@@ -8,12 +8,12 @@ namespace BronzeBar
         static void Main(string[] args)
         {
             Console.WriteLine("Welcome to Bronze Bar.");
-            BronzeBar.DoStartup();
+            BronzeBar.Initialize();
             bool exitRequested = false;
             while (!exitRequested)
             {
                 string userInput = BronzeBar.GetUserInput();
-                exitRequested = BronzeBar.ParseUserInput(userInput);
+                exitRequested = BronzeBar.HandleUserInput(userInput);
             }
         }
     }

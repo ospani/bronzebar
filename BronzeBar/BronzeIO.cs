@@ -7,9 +7,10 @@ namespace BronzeBar
 {
     public static class BronzeIO
     {
-        public static string WorkingDirectory = "C:\\bronzebar\\";
-        public static string PackagesDirectory = $"{Path.Combine(WorkingDirectory, "packages")}";
+        public static readonly string WorkingDirectory = "C:\\bronzebar\\";
+        public static readonly string PackagesDirectory = $"{Path.Combine(WorkingDirectory, "packages")}";
 
+        //Taken and slightly adapted from the excellent example over at https://docs.microsoft.com/en-us/dotnet/standard/io/how-to-copy-directories
         public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
         {
             // Get the subdirectories for the specified directory.

@@ -60,32 +60,46 @@ namespace BronzeBar
             },
             {"update", new Command((string[] args) =>
                 {
-                    string appIdentifier = args[0];
-                    if (string.IsNullOrEmpty(BronzeBar.PackageSelection))
+                    if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))
                     {
-                        PrintLine("No object selected to update.");
+                        PrintLine("No object is being smithed. Select an object for smithing first.");
                         return;
                     }
-                    else if (!Regex.IsMatch(appIdentifier, BronzeBar.InputValidationRegex))
+                    if(args == null || args.Length == 0)
+                    {
+                        PrintLine("Update what?");
+                        if(Directory.Exists(Path.Combine(BronzeIO.PackagesDirectory, BronzeBar.CurrentPackageSelection)))
+                        {
+                            PrintLine("Currently available:");
+                            foreach(string appInPackage in Directory.GetDirectories(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection,"data"))))
+                            {
+                                PrintLine($"|-- {new DirectoryInfo(appInPackage).Name}");
+                            }
+                        }
+                        return;
+                    }
+
+                    string appIdentifier = args[0];
+                    if (!Regex.IsMatch(appIdentifier, BronzeBar.InputValidationRegex))
                     {
                         PrintLine($"Invalid app identifier: {appIdentifier}");
                         PrintLine("Allowed: 1-32 alphanumeric characters including underscores");
                         return;
                     }
-                    if (BronzeIO.PackageExists(BronzeBar.PackageSelection))
+                    if (BronzeIO.PackageExists(BronzeBar.CurrentPackageSelection))
                     {
-                        string appDataFolder = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), appIdentifier);
-                        if (File.Exists($@"{appIdentifier}.BBD"))
+                        string appDataFolder = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"));
+                        if (File.Exists($@"{Path.Combine(appDataFolder,appIdentifier)}.BBD"))
                         {
                             PrintLine("Updating app!");
-                            string mirrorSourceDirectory = File.ReadAllText($@"{appDataFolder}.BBD").Trim();
-                            PrintLine($"Copying {mirrorSourceDirectory} to {appDataFolder}");
-                            BronzeIO.DirectoryCopy(mirrorSourceDirectory, appDataFolder, true);
+                            string mirrorSourceDirectory = File.ReadAllText($@"{Path.Combine(appDataFolder,appIdentifier)}.BBD").Trim();
+                            PrintLine($"Copying {mirrorSourceDirectory} to {Path.Combine(appDataFolder,appIdentifier)}");
+                            BronzeIO.DirectoryCopy(mirrorSourceDirectory, Path.Combine(appDataFolder,appIdentifier), true);
                             PrintLine("Done!");
                         }
                         else
                         {
-                            PrintLine("Could not find " + $@"{appIdentifier}.BBD");
+                            PrintLine("Could not find " + $@"{Path.Combine(appDataFolder,appIdentifier)}.BBD");
                         }
                     }
                     })
@@ -146,13 +160,13 @@ namespace BronzeBar
                         PrintLine($"Cannot smith {selectedPackage}: No object by that name.");
                         return;
                     }
-                    BronzeBar.PackageSelection = selectedPackage;
+                    BronzeBar.CurrentPackageSelection = selectedPackage;
                     PrintLine($"{selectedPackage} is ready for smithing.");
                 })
             },
             {"add", new Command((string[] args) =>
                 {
-                    if (string.IsNullOrEmpty(BronzeBar.PackageSelection))  //Check if user selected a package
+                    if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))  //Check if user selected a package
                     {
                         PrintLine("You're not smithing an object to which you can add a new application.");
                         return;
@@ -166,36 +180,36 @@ namespace BronzeBar
 
                     if (!Directory.Exists(pathToTargetDirectory))
                     {
-                        PrintLine($"Cannot add {pathToTargetDirectory} to {BronzeBar.PackageSelection}: Supplied directory does not exist.");
+                        PrintLine($"Cannot add {pathToTargetDirectory} to {BronzeBar.CurrentPackageSelection}: Supplied directory does not exist.");
                         return;
                     }
-                    if (!BronzeIO.PackageExists(BronzeBar.PackageSelection))
+                    if (!BronzeIO.PackageExists(BronzeBar.CurrentPackageSelection))
                     {
-                        PrintLine($"Cannot add {pathToTargetDirectory} to {BronzeBar.PackageSelection}: Package {BronzeBar.PackageSelection} not found.");
+                        PrintLine($"Cannot add {pathToTargetDirectory} to {BronzeBar.CurrentPackageSelection}: Package {BronzeBar.CurrentPackageSelection} not found.");
                         return;
                     }
 
                     Console.WriteLine("Enter app identifier below:");
                     string programToAddName = BronzeBar.GetUserInput();
 
-                    using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), $"{programToAddName}.BBD")))
+                    using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"), $"{programToAddName}.BBD")))
                     {
                         sw.Write(pathToTargetDirectory);
                     }
-                    string ToCopyTo = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), programToAddName);
+                    string ToCopyTo = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"), programToAddName);
                     BronzeIO.DirectoryCopy(pathToTargetDirectory, ToCopyTo, true);
                     })
             },
             {"deploy", new Command((string[] args) =>
                 {
-                    if (string.IsNullOrEmpty(BronzeBar.PackageSelection))
+                    if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))
                     {
                         PrintLine("No object selected to deploy.");
                         return;
                     }
-                    if (!BronzeIO.PackageExists(BronzeBar.PackageSelection))
+                    if (!BronzeIO.PackageExists(BronzeBar.CurrentPackageSelection))
                     {
-                        PrintLine($"Unhealthy or missing package: {BronzeBar.PackageSelection}.");
+                        PrintLine($"Unhealthy or missing package: {BronzeBar.CurrentPackageSelection}.");
                         return;
                     }
                     PrintLine($"Enter deployment name:");
@@ -203,12 +217,12 @@ namespace BronzeBar
                     PrintLine($"Enter external deployment output directory:");
                     string externalDeploymentTarget = BronzeBar.GetUserInput();
 
-                    FileInfo[] bbdFilesInPackageDirectory = new DirectoryInfo(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data")).GetFiles("*.BBD");
-                    BatchScriptFactory bsf = new BatchScriptFactory(BronzeIO.WorkingDirectory);
+                    FileInfo[] bbdFilesInPackageDirectory = new DirectoryInfo(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data")).GetFiles("*.BBD");
+                    BatchScriptFactory bsf = new BatchScriptFactory(BronzeBar.Settings.WorkingDirectory);
                     foreach (FileInfo bbdOfPackageToDeploy in bbdFilesInPackageDirectory)
                     {
                         string appName = bbdOfPackageToDeploy.Name.Remove(bbdOfPackageToDeploy.Name.Length - 4);
-                        string packageDeploymentDirectory = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "deployments"), deploymentName, appName);
+                        string packageDeploymentDirectory = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "deployments"), deploymentName, appName);
                         PrintLine($"Packaging {appName}...");
                         if (Directory.Exists(packageDeploymentDirectory))
                         {
@@ -220,19 +234,19 @@ namespace BronzeBar
                         }
                         PrintLine("Generating solo app deployment batch...");
 
-                        string deployerBatch = bsf.CreateAppDeployer(BronzeBar.PackageSelection, appName, externalDeploymentTarget);
-                        using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "deployments"), deploymentName, $"solo_{appName}.bat")))
+                        string deployerBatch = bsf.CreateAppDeployer(BronzeBar.CurrentPackageSelection, appName, externalDeploymentTarget);
+                        using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "deployments"), deploymentName, $"solo_{appName}.bat")))
                         {
                             sw.Write(deployerBatch);
                         }
                         PrintLine("Done generating solo app deployment batch.");
-                        PrintLine($"Copying {Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), appName)} to {packageDeploymentDirectory}");
-                        BronzeIO.DirectoryCopy(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "data"), appName), packageDeploymentDirectory, true);
+                        PrintLine($"Copying {Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"), appName)} to {packageDeploymentDirectory}");
+                        BronzeIO.DirectoryCopy(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"), appName), packageDeploymentDirectory, true);
                         PrintLine("Done copying. Enjoy your meal.");
                     }
 
-                    string packageDeployerBatch = bsf.CreatePackageDeployer(BronzeBar.PackageSelection, externalDeploymentTarget);
-                    using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.PackageSelection, "deployments"), deploymentName, $"pack_{deploymentName}.bat")))
+                    string packageDeployerBatch = bsf.CreatePackageDeployer(BronzeBar.CurrentPackageSelection, externalDeploymentTarget);
+                    using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "deployments"), deploymentName, $"pack_{deploymentName}.bat")))
                     {
                         sw.Write(packageDeployerBatch);
                     }

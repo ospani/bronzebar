@@ -236,6 +236,11 @@ namespace BronzeBar
                         Console.WriteLine("Generating solo app deployment batch...");
 
                         string deployerBatch = bsf.CreateAppDeployer(BronzeBar.CurrentPackageSelection, appName, externalDeploymentTarget);
+                        if (string.IsNullOrEmpty(deployerBatch))
+                        {
+                            Console.WriteLine($"Error creating AppDeployer for {appName}. Skipping!");
+                            continue;
+                        }
                         using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "deployments"), deploymentName, $"solo_{appName}.bat")))
                         {
                             sw.Write(deployerBatch);
@@ -247,9 +252,16 @@ namespace BronzeBar
                     }
 
                     string packageDeployerBatch = bsf.CreatePackageDeployer(BronzeBar.CurrentPackageSelection, externalDeploymentTarget);
-                    using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "deployments"), deploymentName, $"pack_{deploymentName}.bat")))
+                    if (string.IsNullOrEmpty(packageDeployerBatch))
                     {
-                        sw.Write(packageDeployerBatch);
+                            Console.WriteLine($"Error creating PackageDeployer for {BronzeBar.CurrentPackageSelection}. Skipping!");
+                    }
+                    else
+                    {
+                        using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "deployments"), deploymentName, $"pack_{deploymentName}.bat")))
+                        {
+                            sw.Write(packageDeployerBatch);
+                        }
                     }
                     })
             },

@@ -83,7 +83,7 @@ namespace BronzeBar
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Error encountered when deserializing settings file.{ex.Message}");
+                            Console.WriteLine($"Error encountered when deserializing settings file. {ex.Message}. Loading default settings.");
                             bronzeBarSettings = GetDefaultSettings();
                         }
                     }

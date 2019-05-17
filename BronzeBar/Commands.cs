@@ -20,19 +20,20 @@ namespace BronzeBar
         }  
     }
 
+
     static class Commands
     {
         private static Dictionary<string, Command> CommandList = new Dictionary<string, Command>()
         {
             {"armory", new Command((string[] args) =>
                 {
-                    PrintLine("* BronzeBar Root");
-                    PrintLine("|");
+                    Console.WriteLine("* BronzeBar Root");
+                    Console.WriteLine("|");
                     foreach (string dir in Directory.GetDirectories(BronzeIO.PackagesDirectory))
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         DirectoryInfo currentDirInfo = new DirectoryInfo(dir);
-                        PrintLine("|---* " + currentDirInfo.Name);
+                        Console.WriteLine("|---* " + currentDirInfo.Name);
                         if (currentDirInfo.GetDirectories().Any(o => o.Name == "data"))
                         {
                             FileInfo[] bbdFilesInPackageDirectory = currentDirInfo.GetDirectories("data")[0].GetFiles("*.BBD");
@@ -48,12 +49,12 @@ namespace BronzeBar
                                 {
                                     extension += " ! BINARIES MISSING";
                                 }
-                                PrintLine("|   |---* " + package.Name.Remove(package.Name.Length - 4) + extension);
+                                Console.WriteLine("|   |---* " + package.Name.Remove(package.Name.Length - 4) + extension);
                             }
-                            PrintLine("|");
+                            Console.WriteLine("|");
                         }
-                        else PrintLine("|   !---* " + "NO DATA FOLDER FOUND!");
-                        if (!currentDirInfo.GetDirectories().Any(o => o.Name == "deployments")) PrintLine("    !---* " + "NO DEPLOYMENTS FOLDER FOUND!");
+                        else Console.WriteLine("|   !---* " + "NO DATA FOLDER FOUND!");
+                        if (!currentDirInfo.GetDirectories().Any(o => o.Name == "deployments")) Console.WriteLine("    !---* " + "NO DEPLOYMENTS FOLDER FOUND!");
                     }
                     Console.ForegroundColor = ConsoleColor.Gray;
                 })
@@ -62,18 +63,18 @@ namespace BronzeBar
                 {
                     if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))
                     {
-                        PrintLine("No object is being smithed. Select an object for smithing first.");
+                        Console.WriteLine("No object is being smithed. Select an object for smithing first.");
                         return;
                     }
                     if(args == null || args.Length == 0)
                     {
-                        PrintLine("Update what?");
+                        Console.WriteLine("Update what?");
                         if(Directory.Exists(Path.Combine(BronzeIO.PackagesDirectory, BronzeBar.CurrentPackageSelection)))
                         {
-                            PrintLine("Currently available:");
+                            Console.WriteLine("Currently available:");
                             foreach(string appInPackage in Directory.GetDirectories(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection,"data"))))
                             {
-                                PrintLine($"|-- {new DirectoryInfo(appInPackage).Name}");
+                                Console.WriteLine($"|-- {new DirectoryInfo(appInPackage).Name}");
                             }
                         }
                         return;
@@ -82,8 +83,8 @@ namespace BronzeBar
                     string appIdentifier = args[0];
                     if (!Regex.IsMatch(appIdentifier, BronzeBar.InputValidationRegex))
                     {
-                        PrintLine($"Invalid app identifier: {appIdentifier}");
-                        PrintLine("Allowed: 1-32 alphanumeric characters including underscores");
+                        Console.WriteLine($"Invalid app identifier: {appIdentifier}");
+                        Console.WriteLine("Allowed: 1-32 alphanumeric characters including underscores");
                         return;
                     }
                     if (BronzeIO.PackageExists(BronzeBar.CurrentPackageSelection))
@@ -91,15 +92,15 @@ namespace BronzeBar
                         string appDataFolder = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"));
                         if (File.Exists($@"{Path.Combine(appDataFolder,appIdentifier)}.BBD"))
                         {
-                            PrintLine("Updating app!");
+                            Console.WriteLine("Updating app!");
                             string mirrorSourceDirectory = File.ReadAllText($@"{Path.Combine(appDataFolder,appIdentifier)}.BBD").Trim();
-                            PrintLine($"Copying {mirrorSourceDirectory} to {Path.Combine(appDataFolder,appIdentifier)}");
+                            Console.WriteLine($"Copying {mirrorSourceDirectory} to {Path.Combine(appDataFolder,appIdentifier)}");
                             BronzeIO.DirectoryCopy(mirrorSourceDirectory, Path.Combine(appDataFolder,appIdentifier), true);
-                            PrintLine("Done!");
+                            Console.WriteLine("Done!");
                         }
                         else
                         {
-                            PrintLine("Could not find " + $@"{Path.Combine(appDataFolder,appIdentifier)}.BBD");
+                            Console.WriteLine("Could not find " + $@"{Path.Combine(appDataFolder,appIdentifier)}.BBD");
                         }
                     }
                     })
@@ -108,20 +109,20 @@ namespace BronzeBar
                 {
                     if(args == null || args.Length == 0)
                     {
-                        PrintLine("Cannot forge an object with no name.");
-                        PrintLine("Allowed: 1-32 alphanumeric characters including underscores");
+                        Console.WriteLine("Cannot forge an object with no name.");
+                        Console.WriteLine("Allowed: 1-32 alphanumeric characters including underscores");
                         return;
                     }
                     string appIdentifier = args[0];
                     if (!Regex.IsMatch(appIdentifier, BronzeBar.InputValidationRegex))
                     {
-                        PrintLine("Cannot forge an object with that name.");
-                        PrintLine("Allowed: 1-32 alphanumeric characters including underscores");
+                        Console.WriteLine("Cannot forge an object with that name.");
+                        Console.WriteLine("Allowed: 1-32 alphanumeric characters including underscores");
                         return;
                     }
                     if (Directory.Exists(Path.Combine(BronzeIO.PackagesDirectory, appIdentifier)))
                     {
-                        PrintLine($"Cannot forge {appIdentifier}: Object by that name already exists.");
+                        Console.WriteLine($"Cannot forge {appIdentifier}: Object by that name already exists.");
                         return;
                     }
                     try
@@ -132,12 +133,12 @@ namespace BronzeBar
                     }
                     catch (Exception ex)
                     {
-                        PrintLine($"Cannot forge {appIdentifier}: {ex.Message} {ex.InnerException.Message}");
+                        Console.WriteLine($"Cannot forge {appIdentifier}: {ex.Message} {ex.InnerException.Message}");
                         return;
                     }
-                    PrintLine($"Forged ");
+                    Console.WriteLine($"Forged ");
                     Console.ForegroundColor = ConsoleColor.DarkYellow;
-                    PrintLine($"{appIdentifier} ");
+                    Console.WriteLine($"{appIdentifier} ");
                     Console.ForegroundColor = ConsoleColor.White;
                 })
             },
@@ -145,11 +146,11 @@ namespace BronzeBar
                 {
                     if(args == null || args.Length == 0)
                     {
-                        PrintLine("Smith what?");
-                        PrintLine("Currently available:");
+                        Console.WriteLine("Smith what?");
+                        Console.WriteLine("Currently available:");
                         foreach(string package in Directory.GetDirectories(BronzeIO.PackagesDirectory))
                         {
-                            PrintLine($"|-- {new DirectoryInfo(package).Name}");
+                            Console.WriteLine($"|-- {new DirectoryInfo(package).Name}");
                         }
                         return;
                     }
@@ -157,35 +158,35 @@ namespace BronzeBar
                     string selectedPackage = args[0];
                     if (!Directory.Exists(Path.Combine(BronzeIO.PackagesDirectory, selectedPackage)))
                     {
-                        PrintLine($"Cannot smith {selectedPackage}: No object by that name.");
+                        Console.WriteLine($"Cannot smith {selectedPackage}: No object by that name.");
                         return;
                     }
                     BronzeBar.CurrentPackageSelection = selectedPackage;
-                    PrintLine($"{selectedPackage} is ready for smithing.");
+                    Console.WriteLine($"{selectedPackage} is ready for smithing.");
                 })
             },
             {"add", new Command((string[] args) =>
                 {
                     if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))  //Check if user selected a package
                     {
-                        PrintLine("You're not smithing an object to which you can add a new application.");
+                        Console.WriteLine("You're not smithing an object to which you can add a new application.");
                         return;
                     }
                     if(args == null || args.Length == 0)
                     {
-                        PrintLine("Cannot add empty: Full directory path of target application required.");
+                        Console.WriteLine("Cannot add empty: Full directory path of target application required.");
                         return;
                     }
                     string pathToTargetDirectory = args[0];
 
                     if (!Directory.Exists(pathToTargetDirectory))
                     {
-                        PrintLine($"Cannot add {pathToTargetDirectory} to {BronzeBar.CurrentPackageSelection}: Supplied directory does not exist.");
+                        Console.WriteLine($"Cannot add {pathToTargetDirectory} to {BronzeBar.CurrentPackageSelection}: Supplied directory does not exist.");
                         return;
                     }
                     if (!BronzeIO.PackageExists(BronzeBar.CurrentPackageSelection))
                     {
-                        PrintLine($"Cannot add {pathToTargetDirectory} to {BronzeBar.CurrentPackageSelection}: Package {BronzeBar.CurrentPackageSelection} not found.");
+                        Console.WriteLine($"Cannot add {pathToTargetDirectory} to {BronzeBar.CurrentPackageSelection}: Package {BronzeBar.CurrentPackageSelection} not found.");
                         return;
                     }
 
@@ -204,17 +205,17 @@ namespace BronzeBar
                 {
                     if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))
                     {
-                        PrintLine("No object selected to deploy.");
+                        Console.WriteLine("No object selected to deploy.");
                         return;
                     }
                     if (!BronzeIO.PackageExists(BronzeBar.CurrentPackageSelection))
                     {
-                        PrintLine($"Unhealthy or missing package: {BronzeBar.CurrentPackageSelection}.");
+                        Console.WriteLine($"Unhealthy or missing package: {BronzeBar.CurrentPackageSelection}.");
                         return;
                     }
-                    PrintLine($"Enter deployment name:");
+                    Console.WriteLine($"Enter deployment name:");
                     string deploymentName = BronzeBar.GetUserInput();
-                    PrintLine($"Enter external deployment output directory:");
+                    Console.WriteLine($"Enter external deployment output directory:");
                     string externalDeploymentTarget = BronzeBar.GetUserInput();
 
                     FileInfo[] bbdFilesInPackageDirectory = new DirectoryInfo(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data")).GetFiles("*.BBD");
@@ -223,26 +224,26 @@ namespace BronzeBar
                     {
                         string appName = bbdOfPackageToDeploy.Name.Remove(bbdOfPackageToDeploy.Name.Length - 4);
                         string packageDeploymentDirectory = Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "deployments"), deploymentName, appName);
-                        PrintLine($"Packaging {appName}...");
+                        Console.WriteLine($"Packaging {appName}...");
                         if (Directory.Exists(packageDeploymentDirectory))
                         {
-                            PrintLine(packageDeploymentDirectory + " already exists as a deployment folder.");
+                            Console.WriteLine(packageDeploymentDirectory + " already exists as a deployment folder.");
                         }
                         else
                         {
                             Directory.CreateDirectory(packageDeploymentDirectory);
                         }
-                        PrintLine("Generating solo app deployment batch...");
+                        Console.WriteLine("Generating solo app deployment batch...");
 
                         string deployerBatch = bsf.CreateAppDeployer(BronzeBar.CurrentPackageSelection, appName, externalDeploymentTarget);
                         using (StreamWriter sw = File.CreateText(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "deployments"), deploymentName, $"solo_{appName}.bat")))
                         {
                             sw.Write(deployerBatch);
                         }
-                        PrintLine("Done generating solo app deployment batch.");
-                        PrintLine($"Copying {Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"), appName)} to {packageDeploymentDirectory}");
+                        Console.WriteLine("Done generating solo app deployment batch.");
+                        Console.WriteLine($"Copying {Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"), appName)} to {packageDeploymentDirectory}");
                         BronzeIO.DirectoryCopy(Path.Combine(BronzeIO.GetSysFolderInPackage(BronzeBar.CurrentPackageSelection, "data"), appName), packageDeploymentDirectory, true);
-                        PrintLine("Done copying. Enjoy your meal.");
+                        Console.WriteLine("Done copying. Enjoy your meal.");
                     }
 
                     string packageDeployerBatch = bsf.CreatePackageDeployer(BronzeBar.CurrentPackageSelection, externalDeploymentTarget);
@@ -254,11 +255,6 @@ namespace BronzeBar
             },
         };
 
-        private static void PrintLine(string v)
-        {
-            Console.WriteLine(v);
-        }
-
         public static void ExecuteCommand(string command, string[] args = null)
         {
             command = command.ToLower();
@@ -268,7 +264,7 @@ namespace BronzeBar
             }
             else
             {
-                PrintLine("Unknown command");
+                Console.WriteLine("Unknown command");
             }
         }
     }

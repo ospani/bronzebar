@@ -9,12 +9,12 @@ namespace BronzeBar
     public class Command
     {
         private readonly Action<string[]> commandImplementation;
-
-        public Command(Action<string[]> commandToExecute)
+        public readonly string Description;
+        public Command(string description, Action<string[]> commandToExecute)
         {
+            Description = description;
             commandImplementation = commandToExecute;
         }
-
         public void Execute(string[] args) {
             commandImplementation?.Invoke(args);
         }  
@@ -25,7 +25,7 @@ namespace BronzeBar
     {
         private static Dictionary<string, Command> CommandList = new Dictionary<string, Command>()
         {
-            {"armory", new Command((string[] args) =>
+            {"armory", new Command("Provides a tree view of all packages and the applications within them.", (string[] args) =>
                 {
                     Console.WriteLine("* BronzeBar Root");
                     Console.WriteLine("|");
@@ -59,7 +59,7 @@ namespace BronzeBar
                     Console.ForegroundColor = ConsoleColor.Gray;
                 })
             },
-            {"update", new Command((string[] args) =>
+            {"update", new Command("Takes an app name as argument and updates that app's files using the directory specified during 'add'ing.", (string[] args) =>
                 {
                     if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))
                     {
@@ -105,7 +105,7 @@ namespace BronzeBar
                     }
                     })
             },
-            {"forge", new Command((string[] args) =>
+            {"forge", new Command("Takes a name as argument and creates a new package by that name. Apps can be 'add'ed to packages.",(string[] args) =>
                 {
                     if(args == null || args.Length == 0)
                     {
@@ -142,7 +142,7 @@ namespace BronzeBar
                     Console.ForegroundColor = ConsoleColor.White;
                 })
             },
-            {"smith", new Command((string[] args) =>
+            {"smith", new Command("Takes a package name as argument and selects that package to perform specialized commands on.",(string[] args) =>
                 {
                     if(args == null || args.Length == 0)
                     {
@@ -165,7 +165,7 @@ namespace BronzeBar
                     Console.WriteLine($"{selectedPackage} is ready for smithing.");
                 })
             },
-            {"add", new Command((string[] args) =>
+            {"add", new Command("Takes a full path to an application executable directory as argument and registers that application within a package.", (string[] args) =>
                 {
                     if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))  //Check if user selected a package
                     {
@@ -201,7 +201,7 @@ namespace BronzeBar
                     BronzeIO.DirectoryCopy(pathToTargetDirectory, ToCopyTo, true);
                     })
             },
-            {"deploy", new Command((string[] args) =>
+            {"deploy", new Command("Creates a automatic deployment package of the current package being smithed.", (string[] args) =>
                 {
                     if (string.IsNullOrEmpty(BronzeBar.CurrentPackageSelection))
                     {
@@ -253,7 +253,14 @@ namespace BronzeBar
                     }
                     })
             },
-        };
+            {"help", new Command("Provides an overview of all commands and their descriptions.", (string [] args) =>
+                {
+                    Console.WriteLine("Available commands:");
+                    foreach(KeyValuePair<string, Command> sc in CommandList) Console.WriteLine($"{sc.Key}\t{sc.Value.Description}");
+                })
+            }
+
+        }.OrderBy(o => o.Key).ToDictionary(t => t.Key, t => t.Value); //TODO: Remove this OrderBy and just manually place everything alphabetically.
 
         public static void ExecuteCommand(string command, string[] args = null)
         {
@@ -264,7 +271,8 @@ namespace BronzeBar
             }
             else
             {
-                Console.WriteLine("Unknown command");
+                Console.WriteLine("Unknown command. Use 'help' for a list of commands.");
+
             }
         }
     }
